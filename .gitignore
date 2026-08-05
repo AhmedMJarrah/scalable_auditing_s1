@@ -15,9 +15,12 @@ token*.json
 service_account*.json
 
 # --- data (legislative data must never reach GitHub) ------------------
-data/raw/
-data/interim/
-data/processed/
+data/raw/*
+data/interim/*
+data/processed/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
 *.db
 *.sqlite
 *.sqlite3
@@ -25,12 +28,14 @@ data/processed/
 *.db-shm
 
 # --- logs -------------------------------------------------------------
-logs/
+logs/*
+!logs/.gitkeep
 *.log
 *.jsonl
 
 # --- reports / exports ------------------------------------------------
-reports/
+reports/*
+!reports/.gitkeep
 *.xlsx
 *.docx
 
