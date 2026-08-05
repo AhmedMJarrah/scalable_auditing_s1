@@ -1,0 +1,52 @@
+# --- virtualenv -------------------------------------------------------
+s1/
+.venv/
+venv/
+env/
+
+
+# --- secrets ----------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+credentials*.json
+token*.json
+service_account*.json
+
+# --- data (legislative data must never reach GitHub) ------------------
+data/raw/
+data/interim/
+data/processed/
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# --- logs -------------------------------------------------------------
+logs/
+*.log
+*.jsonl
+
+# --- reports / exports ------------------------------------------------
+reports/
+*.xlsx
+*.docx
+
+# --- python -----------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- editors / os -----------------------------------------------------
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
