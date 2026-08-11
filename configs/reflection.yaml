@@ -1,0 +1,77 @@
+# ---------------------------------------------------------------------------
+# تدقيق انعكاس التعديلات — Reflection audit
+#
+# Unit: one article. Applies ONLY to legislation that has amendments.
+# Item key is (legislation, article number, amendment version).
+#
+# Sampling: a census of every article an amendment touches, plus a small
+# control set of untouched articles — the control set catches the failure
+# nobody looks for, text that changed when it should have stayed identical.
+# ---------------------------------------------------------------------------
+key: reflection
+spec_version: 1
+title_ar: تدقيق انعكاس التعديلات
+title_en: Amendment reflection audit
+description_ar: >-
+  التحقق من أن نص التعديل انعكس بشكل صحيح وكامل على النص الموحّد للمادة،
+  وأن رقم المادة وترتيب التعديلات صحيحان.
+unit: article
+applies_to: [law, bylaw]
+sheet_env_key: SHEET_ID_REFLECTION
+
+sampling:
+  sample_size:
+    law: 100
+    bylaw: 100
+  overlap_fraction: 0.15
+  golden_fraction: 0.05
+
+scoring:
+  cannot_determine_policy: exclude
+  max_cannot_determine_rate: 0.25
+  aggregate: mean_per_unit
+
+fields:
+  - key: applied
+    label_ar: هل تم تطبيق التعديل على نص المادة؟
+    type: verdict
+    weight: 0.40
+    help_ar: قارن نص التعديل مع النص الموحّد للمادة.
+
+  - key: accuracy
+    label_ar: هل انعكس التعديل بدقة وبالكامل (دون نقص أو زيادة)؟
+    type: verdict
+    weight: 0.30
+    help_ar: انتبه للفقرات والبنود الفرعية — قد يُطبق جزء من التعديل فقط.
+
+  - key: article_number
+    label_ar: هل رقم المادة مطابق للنص في المصدر الرسمي؟
+    type: verdict
+    weight: 0.15
+    help_ar: >-
+      يكشف هذا الحقل انزياح الترقيم. إذا دُمجت أو حُذفت مادة سابقة فإن أرقام
+      كل المواد بعدها تصبح خاطئة رغم صحة النص.
+
+  - key: sequence
+    label_ar: هل طُبقت التعديلات بالترتيب الزمني الصحيح؟
+    type: verdict
+    weight: 0.15
+    help_ar: عند وجود أكثر من تعديل على المادة نفسها، الترتيب يغيّر النص النهائي.
+
+  - key: defect_types
+    label_ar: نوع الخلل المرصود
+    type: multi_select
+    required: false
+    options:
+      - {key: lam_yutabbaq, label_ar: التعديل لم يُطبق إطلاقاً}
+      - {key: tatbiq_juzii, label_ar: طُبق جزئياً}
+      - {key: nass_zaid, label_ar: نص زائد لم يرد في التعديل}
+      - {key: raqm_khati, label_ar: رقم المادة خاطئ}
+      - {key: tartib_khati, label_ar: ترتيب التعديلات خاطئ}
+      - {key: ukhra, label_ar: أخرى}
+
+  - key: note
+    label_ar: ملاحظات
+    type: text
+    required: false
+    max_length: 2000

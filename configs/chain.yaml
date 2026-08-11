@@ -1,0 +1,79 @@
+# ---------------------------------------------------------------------------
+# تدقيق التسلسل — Chain audit
+#
+# Unit: one legislation's entire amendment chain, shown at once.
+# A single link cannot reveal a missing amendment, which is the most valuable
+# question here — hence the whole chain as one item.
+# ---------------------------------------------------------------------------
+key: chain
+spec_version: 1
+title_ar: تدقيق التسلسل
+title_en: Amendment chain audit
+description_ar: >-
+  مراجعة سلسلة التشريع الأصلي وتعديلاته كاملة: الارتباط، الترتيب الزمني،
+  اكتمال التعديلات، والحالة النهائية.
+unit: chain
+applies_to: [law, bylaw]
+sheet_env_key: SHEET_ID_CHAIN
+
+sampling:
+  sample_size:
+    law: 100
+    bylaw: 100
+  overlap_fraction: 0.12
+  golden_fraction: 0.05
+
+scoring:
+  cannot_determine_policy: exclude
+  max_cannot_determine_rate: 0.20
+  aggregate: mean_per_unit
+
+fields:
+  - key: linkage
+    label_ar: هل جميع التعديلات مرتبطة بالتشريع الأصلي الصحيح؟
+    type: verdict
+    weight: 0.30
+    help_ar: انتبه للتشريعات المتشابهة في الاسم — قد يُلحق تعديل بتشريع آخر.
+
+  - key: completeness
+    label_ar: هل السلسلة كاملة (لا يوجد تعديل مفقود)؟
+    type: verdict
+    weight: 0.30
+    help_ar: أهم سؤال في هذا التدقيق. راجع الجريدة الرسمية للسنوات بين التعديلات.
+
+  - key: ordering
+    label_ar: هل الترتيب الزمني للتعديلات صحيح؟
+    type: verdict
+    weight: 0.20
+
+  - key: final_status
+    label_ar: هل الحالة النهائية للتشريع صحيحة بعد آخر تعديل؟
+    type: verdict
+    weight: 0.20
+
+  - key: defect_types
+    label_ar: نوع الخلل المرصود
+    type: multi_select
+    required: false
+    help_ar: اختر كل ما ينطبق. هذا الحقل هو مصدر الرسم البياني للنتائج.
+    options:
+      - {key: taadil_mafqud, label_ar: تعديل مفقود}
+      - {key: taadil_mukarrar, label_ar: تعديل مكرر}
+      - {key: irtibat_khati, label_ar: مرتبط بتشريع خاطئ}
+      - {key: tartib_khati, label_ar: ترتيب زمني خاطئ}
+      - {key: hala_khatia, label_ar: الحالة النهائية خاطئة}
+      - {key: ukhra, label_ar: أخرى}
+
+  - key: affected_amendments
+    label_ar: أي تعديل فيه المشكلة؟
+    type: text
+    required: false
+    max_length: 500
+    help_ar: "اذكر رقم التعديل وسنته، مثال: 38 لسنة 2018."
+
+  - key: note
+    label_ar: ملاحظات
+    type: text
+    required: false
+    max_length: 2000
+    help_ar: اشرح الخلل. إذا اخترت "أخرى" فالشرح هنا إلزامي.

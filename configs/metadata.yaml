@@ -1,0 +1,81 @@
+# ---------------------------------------------------------------------------
+# تدقيق البيانات الوصفية — Metadata audit
+#
+# Unit: one legislation. The auditor compares the record in our database
+# against the official source and answers per field.
+#
+# WEIGHTS ARE PROVISIONAL. Agree them with your manager before the first run;
+# once auditing starts, changing a weight makes results non-comparable and
+# requires bumping spec_version.
+# ---------------------------------------------------------------------------
+key: metadata
+spec_version: 1
+title_ar: تدقيق البيانات الوصفية
+title_en: Metadata audit
+description_ar: >-
+  مقارنة البيانات الوصفية للتشريع (الحالة، الاسم، الرقم، السنة، تاريخ النشر)
+  مع المصدر الرسمي في الجريدة الرسمية.
+unit: legislation
+applies_to: [law, bylaw]
+sheet_env_key: SHEET_ID_METADATA
+
+sampling:
+  sample_size:
+    law: 100
+    bylaw: 100
+  overlap_fraction: 0.12
+  golden_fraction: 0.05
+
+scoring:
+  cannot_determine_policy: exclude
+  max_cannot_determine_rate: 0.20
+  aggregate: mean_per_unit
+
+fields:
+  - key: status
+    label_ar: هل حالة التشريع صحيحة؟
+    label_en: Is the legislation status correct?
+    type: verdict
+    weight: 0.45
+    help_ar: قارن الحالة (ساري / ملغي / معدّل) مع المصدر الرسمي. هذا أهم حقل في التدقيق.
+
+  - key: status_correct_value
+    label_ar: ما الحالة الصحيحة؟
+    type: select
+    required: false
+    show_if:
+      field: status
+      equals: incorrect
+    options:
+      - {key: sari, label_ar: ساري}
+      - {key: mulgha, label_ar: ملغي}
+      - {key: muaddal, label_ar: معدّل}
+      - {key: ghayr_muhaddad, label_ar: غير محدد}
+
+  - key: name
+    label_ar: هل اسم التشريع صحيح ومطابق للمصدر؟
+    type: verdict
+    weight: 0.20
+    help_ar: يشمل الإملاء وعلامات الترقيم. الاختلاف في التشكيل لا يُعد خطأ.
+
+  - key: number
+    label_ar: هل رقم التشريع صحيح؟
+    type: verdict
+    weight: 0.15
+
+  - key: year
+    label_ar: هل سنة التشريع صحيحة؟
+    type: verdict
+    weight: 0.15
+
+  - key: publication_date
+    label_ar: هل تاريخ النشر في الجريدة الرسمية صحيح؟
+    type: verdict
+    weight: 0.05
+
+  - key: note
+    label_ar: ملاحظات
+    type: text
+    required: false
+    max_length: 2000
+    help_ar: اشرح أي خطأ رصدته، مع ذكر المصدر الذي اعتمدت عليه.

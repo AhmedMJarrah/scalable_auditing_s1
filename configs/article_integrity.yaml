@@ -1,0 +1,76 @@
+# ---------------------------------------------------------------------------
+# تدقيق سلامة المواد — Article integrity audit
+#
+# Unit: one article. Applies to legislation with NO amendments, where there is
+# no reflection to check. This is a different question with its own rubric —
+# keeping it separate stops the reflection score being padded with items that
+# were structurally incapable of failing.
+#
+# Sampling: 4 articles drawn segment-randomly from the middle range
+# (20th-80th percentile), one per segment, fixed seed. Legislation with 6 or
+# fewer articles is audited in full.
+# ---------------------------------------------------------------------------
+key: article_integrity
+spec_version: 1
+title_ar: تدقيق سلامة المواد
+title_en: Article integrity audit
+description_ar: >-
+  التحقق من اكتمال نص المادة وصحة رقمها ومطابقتها للمصدر الرسمي، للتشريعات
+  التي لا تحتوي على تعديلات.
+unit: article
+applies_to: [law, bylaw]
+sheet_env_key: SHEET_ID_ARTICLE_INTEGRITY
+
+sampling:
+  sample_size:
+    law: 100
+    bylaw: 100
+  overlap_fraction: 0.12
+  golden_fraction: 0.05
+
+scoring:
+  cannot_determine_policy: exclude
+  max_cannot_determine_rate: 0.20
+  aggregate: mean_per_unit
+
+fields:
+  - key: text_complete
+    label_ar: هل نص المادة كامل وغير مبتور؟
+    type: verdict
+    weight: 0.40
+    help_ar: تأكد من عدم فقدان فقرات أو بنود في نهاية النص.
+
+  - key: text_faithful
+    label_ar: هل النص مطابق للمصدر الرسمي دون تحريف؟
+    type: verdict
+    weight: 0.30
+    help_ar: أخطاء التعرف الضوئي على الحروف شائعة في التشريعات القديمة.
+
+  - key: article_number
+    label_ar: هل رقم المادة مطابق للمصدر الرسمي؟
+    type: verdict
+    weight: 0.20
+    help_ar: يكشف انزياح الترقيم الناتج عن دمج أو حذف مادة سابقة.
+
+  - key: no_merge_split
+    label_ar: هل المادة مفصولة بشكل صحيح (لم تُدمج مع غيرها أو تُقسّم)؟
+    type: verdict
+    weight: 0.10
+
+  - key: defect_types
+    label_ar: نوع الخلل المرصود
+    type: multi_select
+    required: false
+    options:
+      - {key: nass_mabtur, label_ar: نص مبتور}
+      - {key: khata_ocr, label_ar: خطأ في التعرف الضوئي}
+      - {key: raqm_khati, label_ar: رقم المادة خاطئ}
+      - {key: madda_madmuja, label_ar: مادة مدموجة مع أخرى}
+      - {key: madda_muqassama, label_ar: مادة مقسّمة}
+      - {key: ukhra, label_ar: أخرى}
+
+  - key: note
+    label_ar: ملاحظات
+    type: text
+    required: false
+    max_length: 2000

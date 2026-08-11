@@ -1,0 +1,57 @@
+[
+  {
+    "Leg_Name": "قانون رقم 10 لسنة 2000 (قانون التجارة لسنة 2000) وتعديلاته",
+    "Publication": "المنشور في الجريدة الرسمية",
+    "Leg_Number": "10",
+    "Year": "2000",
+    "Article_Count": "3",
+    "Replaced_For": "",
+    "Canceled_By": "",
+    "Magazine_Number": "4500",
+    "Magazine_Page": "100",
+    "Magazine_Date": "01-01-2000",
+    "Issue_Date": "15-12-1999",
+    "Active_Date": "01-02-2000",
+    "End_Date": "",
+    "Replaced_By": "",
+    "Base_Articles": [
+      {
+        "text": "يسمى هذا القانون قانون التجارة لسنة 2000.",
+        "title": "- المادة 1",
+        "article_number": "1",
+        "enforcement_date": "01-02-2000"
+      },
+      {
+        "text": "تطبق أحكام هذا القانون على جميع المؤسسات.",
+        "title": "- المادة 2",
+        "article_number": "2",
+        "enforcement_date": "01-02-2000"
+      }
+    ],
+    "Mod_Legs": [
+      {
+        "Leg_Name": "قانون معدل لقانون التجارة لسنة 2003",
+        "Publication": "المنشور في الجريدة الرسمية",
+        "Leg_Number": "5",
+        "Year": "2003",
+        "Article_Count": "3",
+        "Base_Articles": [
+          {
+            "text": "يسمى هذا القانون قانون التجارة لسنة 2000.",
+            "title": "- المادة 1",
+            "article_number": "1",
+            "enforcement_date": "01-02-2000"
+          }
+        ],
+        "Reflected_Articles": [
+          {
+            "text": "يسمى هذا القانون قانون التجارة لسنة 2000 المعدل.",
+            "title": "- المادة 1",
+            "article_number": "1",
+            "enforcement_date": "01-02-2003"
+          }
+        ]
+      }
+    ]
+  }
+]
