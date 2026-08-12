@@ -53,7 +53,7 @@ def test_tables_created(db: Session) -> None:
     names = set(Base.metadata.tables.keys())
     assert names == {
         "legislation", "auditors", "audit_items", "assignments",
-        "responses", "golden_answers", "sync_log",
+        "responses", "golden_answers", "sync_log", "release_state",
     }
 
 

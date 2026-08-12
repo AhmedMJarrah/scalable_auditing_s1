@@ -265,6 +265,26 @@ class GoldenAnswer(Base):
     item: Mapped["AuditItem"] = relationship(back_populates="golden_answer")
 
 
+class ReleaseState(Base):
+    """
+    How far into the FULL population each audit type has been released to
+    volunteers so far. Only relevant to release_batch.py — run_sampling.py's
+    fixed 100/100 sample doesn't use this at all, it inserts everything in
+    one run.
+
+    released_count is a position into the deterministic, sorted full
+    candidate list (sorted by identity_key) — not a count of database rows,
+    since some candidates in a batch may already exist from a prior
+    run_sampling.py pass and get skipped rather than inserted again.
+    """
+
+    __tablename__ = "release_state"
+
+    spec_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    released_count: Mapped[int] = mapped_column(default=0)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
 class SyncLog(Base):
     """One row per Google Sheets sync attempt — the audit trail for the
     mirror, separate from the app log so it can be queried without grepping

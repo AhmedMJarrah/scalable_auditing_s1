@@ -121,7 +121,11 @@ def build_reflection_items(
     seed: int,
 ) -> BuildResult:
     result = BuildResult(spec_key=spec.key)
-    sampled_ids = {rec.legislation_id for s in samples for rec in s.selected}
+    # sorted(), not a bare set iteration: PYTHONHASHSEED randomizes set
+    # iteration order between process runs, so without this, batch-release
+    # ordering would silently differ every time this script runs, even with
+    # the identical seed and identical sampled legislation.
+    sampled_ids = sorted({rec.legislation_id for s in samples for rec in s.selected})
 
     for leg_id in sampled_ids:
         for item in reflection_items_by_leg.get(leg_id, []):
