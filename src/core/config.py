@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     # SQLite locally, Postgres on the server. Same code either way.
     database_url: str | None = None
 
+    # --- auth / assignment --------------------------------------------------
+    # These were present in .env.example from step 1 but NOT declared here,
+    # so extra="ignore" silently dropped them — reading settings.secret_key
+    # would have raised AttributeError the first time auth code needed it.
+    secret_key: str = ""
+    session_max_age_minutes: int = 480
+    assignment_lease_minutes: int = 45
+
     # --- logging ----------------------------------------------------------
     log_level: str = "INFO"
     log_max_bytes: int = 10 * 1024 * 1024   # 10 MB per file before rotation

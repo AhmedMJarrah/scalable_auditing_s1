@@ -12,7 +12,7 @@ adapter at it.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +22,7 @@ from sqlalchemy import inspect, select                                # noqa: E4
 
 from src.core.config import get_settings                              # noqa: E402
 from src.core.logging_setup import get_logger, setup_logging, stage   # noqa: E402
-from src.db.base import Base                                          # noqa: E402
+from src.db.base import Base, utcnow                                  # noqa: E402
 from src.db import models                                             # noqa: E402
 from src.db.session import get_engine, session_scope                  # noqa: E402
 
@@ -85,7 +85,7 @@ def check_arabic_roundtrip() -> tuple[bool, str]:
 
             assignment = models.Assignment(
                 item_id=item.id, auditor_id=auditor.id,
-                lease_expires_at=datetime.now(timezone.utc) + timedelta(minutes=1),
+                lease_expires_at=utcnow() + timedelta(minutes=1),
             )
             db.add(assignment)
             db.flush()

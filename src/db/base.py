@@ -22,7 +22,17 @@ def new_id() -> str:
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    """
+    Naive datetime, but always UTC by convention — deliberately, not an
+    oversight. SQLite has no real timezone-aware datetime type: a value
+    written as aware comes back naive after a round trip through the
+    database (e.g. right after a session-expiring commit re-fetches a row).
+    Comparing that against a still-aware datetime.now(timezone.utc) raises
+    TypeError. Keeping every stored timestamp naive-but-UTC means every
+    comparison in this codebase is naive-vs-naive and always correct,
+    instead of correct only until the first round trip.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
