@@ -18,6 +18,16 @@ scoring layers actually consume:
 Article-integrity candidates (legislation with NO Mod_Legs) are produced by
 article_integrity_items().
 
+Matching before/after state per article: "before" always comes from the
+source's own per-amendment Base_Articles field (trusted as authoritative —
+per the source, it already represents "the articles at that stage"). When
+an article in Reflected_Articles has no match there, match_status
+distinguishes a genuinely new article (number beyond anything known to
+exist before) from a suspected renumbering orphan (number that plausibly
+existed but wasn't found — e.g. an earlier deletion shifted everything
+after it, or the article uses non-numeric numbering like "5 مكرر"). See
+ReflectionItem.match_status and _classify_match().
+
 Known gap (flag to the source team before building the audit UI screen):
 this structure carries Base_Articles/Reflected_Articles per amendment, i.e.
 the observed diff, but not the amendment's *instruction text*. The
@@ -89,6 +99,22 @@ class ReflectionItem:
     article_number: str
     base_text: str | None             # None if the article is newly introduced
     reflected_text: str
+    # 'matched'            — article_number found in this amendment's own
+    #                        declared Base_Articles; ordinary case.
+    # 'new_article'        — not found, and its number is beyond every
+    #                        number known to exist before this amendment —
+    #                        consistent with a genuinely new article
+    #                        appended at the end.
+    # 'orphan_suspected'   — not found, but its number falls WITHIN the
+    #                        range that existed before this amendment (or
+    #                        isn't a plain integer at all, e.g. "5 مكرر").
+    #                        This is the renumbering case: the article
+    #                        plausibly existed under a different number and
+    #                        the by-number match silently failed to find
+    #                        it. Needs a human to verify, not an automatic
+    #                        pass — do not treat base_text=None here the
+    #                        same as a confirmed new article.
+    match_status: str = "matched"
 
 
 @dataclass
@@ -122,6 +148,43 @@ def _parse_articles(raw_list: list[dict], where: str) -> list[Article]:
     return articles
 
 
+def _classify_match(
+    article_number: str, before: Article | None, cumulative_known_numbers: set[int],
+) -> str:
+    """
+    Decide whether a reflected article with no exact-number match in this
+    amendment's own declared Base_Articles is a genuinely new article, or a
+    suspected renumbering orphan.
+
+    cumulative_known_numbers is every numeric article number seen ANYWHERE
+    in this legislation's history up to (not including) this amendment —
+    the original Base_Articles plus every prior amendment's Reflected_Articles.
+    Using the full history here, not just this one amendment's own base
+    list, is what makes this catch a renumbering case: if article "7"
+    existed two amendments ago and now can't be matched, that is exactly
+    the situation worth flagging, even though it isn't in THIS amendment's
+    own (possibly incomplete or shifted) base list.
+    """
+    if before is not None:
+        return "matched"
+
+    try:
+        this_number = int(article_number)
+    except ValueError:
+        # Non-numeric numbering (e.g. "5 مكرر" — an inserted article that
+        # deliberately avoids renumbering everything after it). Magnitude
+        # comparison doesn't apply; flag for a human rather than guessing.
+        return "orphan_suspected"
+
+    if this_number in cumulative_known_numbers:
+        # This number existed at some point in the legislation's history,
+        # yet has no match right here — the renumbering case.
+        return "orphan_suspected"
+
+    highest_known = max(cumulative_known_numbers, default=0)
+    return "new_article" if this_number > highest_known else "orphan_suspected"
+
+
 def parse_legislation(raw: dict[str, Any]) -> tuple[
     LegislationRef, list[Article], ChainItem, list[MetadataItem],
     list[ReflectionItem], list[ArticleIntegrityItem],
@@ -133,12 +196,21 @@ def parse_legislation(raw: dict[str, Any]) -> tuple[
         year=str(raw["Year"]), raw=raw,
     )
     base_articles = _parse_articles(raw.get("Base_Articles", []), "Base_Articles")
-    base_by_number = {a.article_number: a for a in base_articles}
 
     mods_raw = raw.get("Mod_Legs", [])
     metadata_items = [MetadataItem(base_ref.legislation_id, base_ref.leg_name, "base", raw)]
     reflection_items: list[ReflectionItem] = []
     amendment_ids: list[str] = []
+
+    def _as_int(n: str) -> int | None:
+        try:
+            return int(n)
+        except ValueError:
+            return None
+
+    cumulative_known_numbers: set[int] = {
+        n for n in (_as_int(a.article_number) for a in base_articles) if n is not None
+    }
 
     for i, mod in enumerate(mods_raw):
         _require(mod, REQUIRED_LEG_KEYS, f"Mod_Legs[{i}]")
@@ -160,17 +232,27 @@ def parse_legislation(raw: dict[str, Any]) -> tuple[
 
         for art in reflected:
             before = mod_base_by_number.get(art.article_number)
+            status = _classify_match(art.article_number, before, cumulative_known_numbers)
+            if status == "orphan_suspected":
+                log.warning("reflection.orphan_suspected", extra={
+                    "legislation_id": base_ref.legislation_id,
+                    "amendment_id": mod_ref.legislation_id,
+                    "article_number": art.article_number,
+                })
             reflection_items.append(ReflectionItem(
                 legislation_id=base_ref.legislation_id,
                 amendment_id=mod_ref.legislation_id,
                 article_number=art.article_number,
                 base_text=before.text if before else None,
                 reflected_text=art.text,
+                match_status=status,
             ))
-        # advance the running snapshot so a later amendment's "before" state
-        # reflects earlier amendments, not just the original base text.
-        for art in reflected:
-            base_by_number[art.article_number] = art
+
+        # Extend the cumulative set with this amendment's article numbers —
+        # so the NEXT amendment's classification sees everything up to now.
+        cumulative_known_numbers |= {
+            n for n in (_as_int(a.article_number) for a in reflected) if n is not None
+        }
 
     chain_item = ChainItem(
         legislation_id=base_ref.legislation_id,
