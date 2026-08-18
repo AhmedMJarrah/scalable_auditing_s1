@@ -156,6 +156,17 @@ class AuditItem(Base):
     # amendment_id and article_number are nullable and NULL != NULL in SQL.
     identity_key: Mapped[str] = mapped_column(String(300), unique=True)
 
+    # Only meaningful for reflection items (see src/ingest/reflection_source.py
+    # ReflectionItem.match_status). NULL for every other audit type. This is
+    # a confidence flag about the before/after MATCH itself, not a scored
+    # rubric answer — deliberately kept out of the auditor's question set so
+    # it never pollutes the accuracy percentage. It still has a real
+    # consequence: leasing.required_reviews() forces two independent
+    # reviews on any item flagged 'orphan_suspected', regardless of the
+    # normal overlap_fraction draw, because these are exactly the items
+    # most likely to be silently wrong.
+    match_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
     legislation_id: Mapped[str] = mapped_column(ForeignKey("legislation.id"))
     # Set for chain/reflection items pointing at a specific amendment;
     # NULL for a plain metadata or article-integrity item.

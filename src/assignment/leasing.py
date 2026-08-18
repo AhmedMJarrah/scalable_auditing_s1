@@ -53,6 +53,13 @@ def needs_overlap(identity_key: str, overlap_fraction: float, seed: int) -> bool
 
 
 def required_reviews(item: AuditItem, overlap_fraction: float, seed: int) -> int:
+    if item.match_status == "orphan_suspected":
+        # These are exactly the items most likely to be silently wrong —
+        # a low-confidence before/after match, not a normal defect. Force
+        # a second independent review regardless of the usual overlap
+        # draw, rather than leaving it to chance whether this one lands
+        # in the random overlap_fraction sample.
+        return 2
     return 2 if needs_overlap(item.identity_key, overlap_fraction, seed) else 1
 
 

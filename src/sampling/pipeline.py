@@ -183,6 +183,7 @@ def insert_items(db: Session, candidates: list[ItemCandidate]) -> tuple[int, int
             spec_key=c.spec_key, unit=c.unit, legislation_id=c.legislation_id,
             amendment_id=c.amendment_id, article_number=c.article_number,
             is_golden=c.is_golden, identity_key=c.identity_key,
+            match_status=c.match_status,
         ))
         existing.add(c.identity_key)
         inserted += 1

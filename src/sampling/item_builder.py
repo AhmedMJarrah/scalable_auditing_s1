@@ -47,6 +47,8 @@ class ItemCandidate:
     amendment_id: str | None = None
     article_number: str | None = None
     is_golden: bool = False
+    # See models.AuditItem.match_status — only set for reflection items.
+    match_status: str | None = None
 
     @property
     def identity_key(self) -> str:
@@ -132,6 +134,7 @@ def build_reflection_items(
             result.candidates.append(ItemCandidate(
                 spec.key, "article", item.legislation_id,
                 amendment_id=item.amendment_id, article_number=item.article_number,
+                match_status=item.match_status,
             ))
     _mark_golden(result.candidates, spec.sampling.golden_fraction, seed)
     return result

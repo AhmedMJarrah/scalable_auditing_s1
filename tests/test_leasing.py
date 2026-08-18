@@ -14,6 +14,7 @@ from src.assignment.leasing import (
 )
 from src.db.base import Base, utcnow
 from src.db.models import AuditItem, Legislation
+from src.assignment.leasing import required_reviews
 
 
 @pytest.fixture()
@@ -185,3 +186,64 @@ def test_required_reviews_matches_overlap_decision(db) -> None:
     assert n == 2
     n0 = required_reviews(item, overlap_fraction=0.0, seed=1)
     assert n0 == 1
+
+
+# --- orphan_suspected forces double review ---------------------------------
+def test_orphan_suspected_forces_two_reviews_even_with_zero_overlap(db) -> None:
+    db.add(Legislation(id="10/2000", leg_name="x", leg_number="10", year="2000", leg_type="law"))
+    db.flush()
+    item = AuditItem(spec_key="reflection", unit="article", legislation_id="10/2000",
+                      article_number="7", match_status="orphan_suspected")
+    db.add(item)
+    db.commit()
+
+    n = required_reviews(item, overlap_fraction=0.0, seed=1)
+    assert n == 2
+
+
+def test_matched_status_does_not_force_extra_review(db) -> None:
+    db.add(Legislation(id="10/2000", leg_name="x", leg_number="10", year="2000", leg_type="law"))
+    db.flush()
+    item = AuditItem(spec_key="reflection", unit="article", legislation_id="10/2000",
+                      article_number="7", match_status="matched")
+    db.add(item)
+    db.commit()
+
+    n = required_reviews(item, overlap_fraction=0.0, seed=1)
+    assert n == 1
+
+
+def test_orphan_suspected_item_checked_out_by_two_different_auditors(db) -> None:
+    db.add(Legislation(id="10/2000", leg_name="x", leg_number="10", year="2000", leg_type="law"))
+    db.flush()
+    db.add(AuditItem(spec_key="reflection", unit="article", legislation_id="10/2000",
+                      article_number="7", match_status="orphan_suspected"))
+    db.commit()
+
+    a1, a2 = _auditor(db, "a1"), _auditor(db, "a2")
+
+    # overlap_fraction=0.0 — under normal circumstances this item would
+    # need only ONE review; orphan_suspected must override that.
+    first = checkout_next_item(db, a1.id, "reflection", overlap_fraction=0.0, seed=1, lease_minutes=45)
+    submit_response(db, first.id, a1.id, "reflection", spec_version=1, answers={"applied": "correct"})
+    db.commit()
+
+    second = checkout_next_item(db, a2.id, "reflection", overlap_fraction=0.0, seed=1, lease_minutes=45)
+    assert second is not None
+    assert second.item_id == first.item_id
+
+
+def test_orphan_suspected_closes_after_two_responses_not_one(db) -> None:
+    db.add(Legislation(id="10/2000", leg_name="x", leg_number="10", year="2000", leg_type="law"))
+    db.flush()
+    db.add(AuditItem(spec_key="reflection", unit="article", legislation_id="10/2000",
+                      article_number="7", match_status="orphan_suspected"))
+    db.commit()
+
+    a1, a2, a3 = _auditor(db, "a1"), _auditor(db, "a2"), _auditor(db, "a3")
+    for a in (a1, a2):
+        assignment = checkout_next_item(db, a.id, "reflection", 0.0, seed=1, lease_minutes=45)
+        submit_response(db, assignment.id, a.id, "reflection", 1, {"applied": "correct"})
+        db.commit()
+
+    assert checkout_next_item(db, a3.id, "reflection", 0.0, seed=1, lease_minutes=45) is None
