@@ -40,6 +40,8 @@ google-auth>=2.30
 
 # --- charts ------------------------------------------------------------
 matplotlib>=3.9
+arabic-reshaper>=3.0    # required — matplotlib does not shape Arabic text on its own
+python-bidi>=0.4        # required — matplotlib does not apply right-to-left ordering on its own
 
 # --- dev ---------------------------------------------------------------
 pytest>=8.2
