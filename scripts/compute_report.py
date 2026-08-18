@@ -27,7 +27,9 @@ import matplotlib                                                      # noqa: E
 matplotlib.use("Agg")                                                  # headless — no display needed
 import matplotlib.pyplot as plt                                        # noqa: E402
 import arabic_reshaper                                                 # noqa: E402
-from bidi.algorithm import get_display                                 # noqa: E402
+#from bidi.algorithm import get_display                                 # noqa: E402
+import arabic_reshaper
+
 
 # matplotlib's core text renderer does NOT reliably shape Arabic (letter
 # joining) or apply bidi (right-to-left ordering) on its own — behavior
@@ -40,13 +42,8 @@ plt.rcParams["axes.unicode_minus"] = False
 
 
 def ar(text: str) -> str:
-    """Reshape + bidi-reorder Arabic text for matplotlib. Every string that
-    reaches a matplotlib text artist (title, axis label, tick label) must
-    go through this — plain Arabic strings render as disconnected,
-    wrong-direction glyphs otherwise."""
-    if not text:
-        return text
-    return get_display(arabic_reshaper.reshape(text))
+    """Shape Arabic text for matplotlib rendering (Windows-verified: reshape only, no bidi)."""
+    return arabic_reshaper.reshape(text)
 
 from src.core.config import get_settings                               # noqa: E402
 from src.core.logging_setup import get_logger, setup_logging, stage    # noqa: E402
