@@ -27,22 +27,22 @@ import matplotlib                                                      # noqa: E
 matplotlib.use("Agg")                                                  # headless — no display needed
 import matplotlib.pyplot as plt                                        # noqa: E402
 import arabic_reshaper                                                 # noqa: E402
-#from bidi.algorithm import get_display                                 # noqa: E402
-import arabic_reshaper
-
 
 # matplotlib's core text renderer does NOT reliably shape Arabic (letter
-# joining) or apply bidi (right-to-left ordering) on its own — behavior
-# varies by platform/font stack, so this is applied explicitly rather than
-# trusted to happen automatically. Arial and Tahoma both ship with Windows
-# and have full Arabic glyph coverage; DejaVu Sans is the cross-platform
-# fallback if neither is installed.
+# joining) on its own — behavior confirmed on Windows 10 / this font stack.
+# NOTE: bidi.get_display() was removed after diagnostic testing showed
+# Windows/matplotlib already renders reshaped Arabic in correct visual
+# order — applying get_display() on top double-reorders it. See
+# rtl_diagnostic.py. Do not re-add get_display() without re-running that
+# diagnostic first.
 plt.rcParams["font.family"] = ["Arial", "Tahoma", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
 
 def ar(text: str) -> str:
     """Shape Arabic text for matplotlib rendering (Windows-verified: reshape only, no bidi)."""
+    if not text:
+        return text
     return arabic_reshaper.reshape(text)
 
 from src.core.config import get_settings                               # noqa: E402
